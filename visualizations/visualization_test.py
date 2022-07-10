@@ -8,6 +8,7 @@ from scipy import io
 import math
 import os
 from utils import tools
+from os.path import exists
 
 root_path = r'X:\temp/'
 file_name_list = [file_name for file_name in os.listdir(root_path) if file_name.endswith(".mat")]
@@ -28,27 +29,38 @@ non_zero_labels = tools.get_is_ftu_label(final_output)
 for t in range(len(file_name_list)):
     # for t in range(3):
     file_name = file_name_list[t]
-    mat_path = root_path + file_name
-    digits = io.loadmat(mat_path)
 
-    X = digits.get('feature_matrix')
+    has_existing_tsne_data = True
+    tsne_mat_file_path = root_path + rf'colon_tsne\{file_name.replace(".", "_tsne.")}'
+
+    # try to read existing tsne data first
+    if has_existing_tsne_data and exists(tsne_mat_file_path):
+        X_tsne = io.loadmat(tsne_mat_file_path).get('feature_matrix')
+        print("loaded tsne data from existing mat.", X_tsne.shape)
+
+    # do tsne calculation and save the tsne mat
+    else:
+        mat_path = root_path + file_name
+        digits = io.loadmat(mat_path)
+
+        X = digits.get('feature_matrix')
+        print(X.shape)
+        X = X.reshape(X.shape[0], -1)
+        n_samples, n_features = X.shape
+
+        '''t-SNE'''
+        tsne = TSNE(n_components=2, init='random', random_state=42)
+        X_tsne = tsne.fit_transform(X)
+        print(file_name, "\t",
+              "After {} iter: Org data dimension is {}. Embedded data dimension is {}".format(tsne.n_iter, X.shape[-1],
+                                                                                              X_tsne.shape[-1]))
+
+        # save tsne raw result to mat
+        digits['feature_matrix'] = X_tsne
+        io.savemat(tsne_mat_file_path, mdict=digits)
+
     # y = digits.get('image_id')[0]
     y = non_zero_labels
-    print(X.shape)
-    X = X.reshape(X.shape[0], -1)
-    n_samples, n_features = X.shape
-
-    '''t-SNE'''
-    tsne = TSNE(n_components=2, init='random', random_state=42)
-    X_tsne = tsne.fit_transform(X)
-    print(file_name, "\t",
-          "After {} iter: Org data dimension is {}. Embedded data dimension is {}".format(tsne.n_iter, X.shape[-1],
-                                                                                          X_tsne.shape[-1]))
-
-    # save tsne raw result to mat
-    digits['feature_matrix'] = X_tsne
-    io.savemat(root_path + rf'colon_tsne\{file_name.replace(".", "_tsne.")}', mdict=digits)
-
     X_norm = tools.get_norm(X_tsne)
     ax = fig.add_subplot(gs[t])
     # plt.figure(figsize=(8, 8))

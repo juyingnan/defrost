@@ -10,24 +10,32 @@ import os
 from utils import tools
 from os.path import exists
 import pandas as pd
+import unet_pos_def
 
 root_path = r'X:\temp/'
 file_name_list = [file_name for file_name in os.listdir(root_path) if file_name.endswith(".mat")]
 
-N = len(file_name_list)
-cols = 5
-rows = int(math.ceil(N / cols))
+use_unet_structure_pos = True
+if use_unet_structure_pos:
+    cols = unet_pos_def.tom_1_unet_def["cols"]
+    rows = unet_pos_def.tom_1_unet_def["rows"]
+else:
+    N = len(file_name_list)
+    cols = 5
+    rows = int(math.ceil(N / cols))
 
 horizontal_spacing = 0.03
+layer_names = [file_name.split('_')[1].split('.')[0] for file_name in file_name_list]
 fig = make_subplots(
     rows=rows, cols=cols,
     # column_widths=[1.0, 0],
     # row_heights=[0.7, 0.2, 0.1],
-    specs=[
+    specs=unet_pos_def.tom_1_unet_def["spec"] if use_unet_structure_pos else [
         [{"type": "Scatter"} for i in range(cols)] for j in range(rows)
     ],
+    print_grid=True,
     horizontal_spacing=horizontal_spacing, vertical_spacing=0.02, shared_xaxes=True,
-    subplot_titles=[file_name.split('_')[1].split('.')[0] for file_name in file_name_list]
+    subplot_titles=unet_pos_def.tom_1_unet_def["names"]
 )
 
 # get FTU and non-FTU label
@@ -93,8 +101,9 @@ for t in range(len(file_name_list)):
                                  legendgroup=legend,
                                  showlegend=True if t == 0 else False,
                                  ),
-                      row=t // cols + 1,
-                      col=t % cols + 1)
+                      row=unet_pos_def.tom_1_unet_def[layer_names[t]][0] if use_unet_structure_pos else (t // cols + 1),
+                      col=unet_pos_def.tom_1_unet_def[layer_names[t]][1] if use_unet_structure_pos else (t % cols + 1),
+                      )
 
 fig.update_xaxes(range=[-0.09, 1.09], showticklabels=False)
 fig.update_yaxes(range=[-0.09, 1.09], showticklabels=False)

@@ -12,6 +12,18 @@ from os.path import exists
 import pandas as pd
 import unet_pos_def
 
+ftu_label_dict = {
+    1: "FTU",
+    0: "FTU edge",
+    -1: "non-FTU",
+}
+
+color_label_dict = {
+    1: "blue",
+    0: "azure",
+    -1: "red",
+}
+
 root_path = r'X:\temp/'
 file_name_list = [file_name for file_name in os.listdir(root_path) if file_name.endswith(".mat")]
 
@@ -85,11 +97,12 @@ for t in range(len(file_name_list)):
     x_norm_df = pd.DataFrame()
     x_norm_df["X"] = X_norm[:, 0]
     x_norm_df["Y"] = X_norm[:, 1]
-    x_norm_df["FTU"] = ["FTU" if label == 1 else "non-FTU" for label in non_zero_labels]
-    x_norm_df["color"] = ["blue" if label == 1 else "red" for label in non_zero_labels]
+    x_norm_df["FTU"] = [ftu_label_dict[label] for label in non_zero_labels]
+    x_norm_df["color"] = [color_label_dict[label] for label in non_zero_labels]
     print(x_norm_df)
 
-    for legend in ["FTU", "non-FTU"]:
+    for label in ftu_label_dict:
+        legend = ftu_label_dict[label]
         select_df = x_norm_df[x_norm_df['FTU'] == legend]
         fig.add_trace(go.Scatter(x=select_df["X"], y=select_df["Y"],
                                  mode='markers',

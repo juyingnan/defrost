@@ -11,8 +11,10 @@ def get_is_ftu_label(mask_mat, threshold=0.05, need_rates=False):
         # print(non_zero_rate)
         if non_zero_rate > threshold:
             ftu_labels.append(1)
-        else:
+        elif non_zero_rate > threshold / 100:
             ftu_labels.append(0)
+        else:
+            ftu_labels.append(-1)
     if need_rates:
         return ftu_labels, non_zero_rates
     else:

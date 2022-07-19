@@ -1,16 +1,17 @@
-# reference: https://github.com/DmitryUlyanov/Multicore-TSNE
-
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
-# from MulticoreTSNE import MulticoreTSNE as TSNE
-from sklearn.manifold import TSNE
 from scipy import io
 import math
 import os
-from utils import tools
-from os.path import exists
 import pandas as pd
 import unet_pos_def
+from utils import tools, mapping_functions
+from os.path import exists
+from sklearn import metrics
+
+dimension_reduction_types = ['tsne', 'umap', 'svd']
+dr_index = 1
+dr_type = dimension_reduction_types[dr_index]
 
 ftu_label_dict = {
     1: "FTU",
@@ -59,14 +60,14 @@ for t in range(len(file_name_list)):
     # for t in range(3):
     file_name = file_name_list[t]
 
-    has_existing_tsne_data = True
-    tsne_mat_file_path = root_path + rf'colon_tsne\{file_name.replace(".", "_tsne.")}'
+    has_mapping_data = True
+    mapping_mat_file_path = root_path + rf'colon_{dr_type}\{file_name.replace(".", f"_{dr_type}.")}'
 
     # try to read existing tsne data first
-    if has_existing_tsne_data and exists(tsne_mat_file_path):
-        digits = io.loadmat(tsne_mat_file_path)
-        X_tsne = digits.get('feature_matrix')
-        print("loaded tsne data from existing mat.", X_tsne.shape)
+    if has_mapping_data and exists(mapping_mat_file_path):
+        digits = io.loadmat(mapping_mat_file_path)
+        X_mapping = digits.get('feature_matrix')
+        print(f"Loaded {dr_type} mapping data from existing mat.", X_mapping.shape)
 
     # do tsne calculation and save the tsne mat
     else:
@@ -75,23 +76,17 @@ for t in range(len(file_name_list)):
 
         X = digits.get('feature_matrix')
         print(X.shape)
-        X = X.reshape(X.shape[0], -1)
-        n_samples, n_features = X.shape
-
-        '''t-SNE'''
-        tsne = TSNE(n_components=2, init='random', random_state=42)
-        X_tsne = tsne.fit_transform(X)
-        print(file_name, "\t",
-              "After {} iter: Org data dimension is {}. Embedded data dimension is {}".format(tsne.n_iter, X.shape[-1],
-                                                                                              X_tsne.shape[-1]))
+        mapping_function = getattr(mapping_functions, f"cal_{dr_type}")
+        X = digits.get('feature_matrix')
+        X_mapping = mapping_function(X)
 
         # save tsne raw result to mat
-        digits['feature_matrix'] = X_tsne
-        io.savemat(tsne_mat_file_path, mdict=digits)
+        digits['feature_matrix'] = X_mapping
+        io.savemat(mapping_mat_file_path, mdict=digits)
 
     # y = digits.get('image_id')[0]
     y = non_zero_labels
-    X_norm = tools.get_norm(X_tsne)
+    X_norm = tools.get_norm(X_mapping)
     # plt.figure(figsize=(8, 8))
 
     x_norm_df = pd.DataFrame()
@@ -100,6 +95,9 @@ for t in range(len(file_name_list)):
     x_norm_df["FTU"] = [ftu_label_dict[label] for label in non_zero_labels]
     x_norm_df["color"] = [color_label_dict[label] for label in non_zero_labels]
     print(x_norm_df)
+
+    row = unet_pos_def.tom_1_unet_def[layer_names[t]][0] if use_unet_structure_pos else (t // cols + 1)
+    col = unet_pos_def.tom_1_unet_def[layer_names[t]][1] if use_unet_structure_pos else (t % cols + 1)
 
     for label in ftu_label_dict:
         legend = ftu_label_dict[label]
@@ -114,11 +112,28 @@ for t in range(len(file_name_list)):
                                  legendgroup=legend,
                                  showlegend=True if t == 0 else False,
                                  ),
-                      row=unet_pos_def.tom_1_unet_def[layer_names[t]][0] if use_unet_structure_pos else (t // cols + 1),
-                      col=unet_pos_def.tom_1_unet_def[layer_names[t]][1] if use_unet_structure_pos else (t % cols + 1),
+                      row=row,
+                      col=col,
                       )
+        fig.add_annotation(xref='x domain',
+                           yref='y domain',
+                           x=0.99,
+                           y=0.01,
+                           text="{:.2f}".format(metrics.calinski_harabasz_score(X_norm, y)),
+                           showarrow=False,
+                           row=row,
+                           col=col,
+                           )
+
+    # calculate cluster silhouette coefficient
+    print(file_name,
+          metrics.silhouette_score(X_norm, y, metric='euclidean'),
+          metrics.calinski_harabasz_score(X_norm, y),
+          metrics.davies_bouldin_score(X_norm, y),
+          )
 
 fig.update_xaxes(range=[-0.09, 1.09], showticklabels=False)
 fig.update_yaxes(range=[-0.09, 1.09], showticklabels=False)
-fig.write_html(fr".\result\{file_name_list[0].split('_')[0]}_tsne.html")
+
+fig.write_html(fr".\result\{file_name_list[0].split('_')[0]}_{dr_type}.html")
 fig.show()

@@ -105,6 +105,7 @@ for t in range(len(file_name_list)):
         fig.add_trace(go.Scatter(x=select_df["X"], y=select_df["Y"],
                                  mode='markers',
                                  marker=dict(
+                                     size = 4,
                                      color=select_df["color"],
                                      line_width=1),
                                  opacity=0.8,

@@ -122,6 +122,7 @@ def read_img_files(path, file_name_list, batch_size):
         for c in range(n_col):
             for r in range(n_row):
                 patch = img[c * patch_h: c * patch_h + patch_h, r * patch_w: r * patch_w + patch_w] * 255
+                # io.imsave(f"{idx-1}.jpg", patch)
                 patches.append(patch.astype(np.uint8))
         del img
         # idd = 0
@@ -175,6 +176,7 @@ def read_raw_img_files(path, file_name_list, batch_size):
 
                 # save test
                 # io.imsave(f"{image_id}_{batch_id}_{patch_id}_{_id}_{idx}.jpg", patch)
+                # io.imsave(f"{idx}.jpg", patch)
 
                 mat.append(patch)
                 info.append(meta_info_labels)

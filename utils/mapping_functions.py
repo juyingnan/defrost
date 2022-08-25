@@ -5,23 +5,23 @@ from sklearn.manifold import TSNE
 from umap import UMAP
 from skimage.transform import rescale
 
-def cal_tsne(feature_mat):
+def cal_tsne(feature_mat, n=2):
     print("tsne input shape:", feature_mat.shape)
     X = feature_mat.reshape(feature_mat.shape[0], -1)
     # n_samples, n_features = X.shape
 
     '''t-SNE'''
-    tsne = TSNE(n_components=2, init='random', random_state=42)
+    tsne = TSNE(n_components=n, init='random', random_state=42)
     return tsne.fit_transform(X)
 
 
-def cal_umap(feature_mat):
+def cal_umap(feature_mat, n=2):
     print("umap input shape:", feature_mat.shape)
     X = feature_mat.reshape(feature_mat.shape[0], -1)
     # n_samples, n_features = X.shape
 
     '''UMAP'''
-    umap_2d = UMAP(n_components=2, init='random', random_state=42)
+    umap_2d = UMAP(n_components=n, init='random', random_state=42, n_neighbors=100)
     return umap_2d.fit_transform(X)
 
 

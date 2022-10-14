@@ -45,9 +45,9 @@ dr_index = 1
 dr_type = dimension_reduction_types[dr_index]
 
 ftu_label_dict = {
-    1: "FTU",
+    1: "ship",
     0: "FTU edge",
-    -1: "non-FTU",
+    -1: "non-ship",
 }
 
 color_label_dict = {
@@ -56,7 +56,7 @@ color_label_dict = {
     -1: "red",
 }
 
-root_path = r'X:\temp/'
+root_path = r'X:\temp\neec/'
 file_name_list = [file_name for file_name in os.listdir(root_path) if file_name.endswith(".mat")]
 
 use_unet_structure_pos = True
@@ -83,7 +83,7 @@ fig = make_subplots(
 )
 
 # get FTU and non-FTU label
-final_mat = io.loadmat(root_path + 'colon_final2.mat')
+final_mat = io.loadmat(root_path + 'ship_final2.mat')
 final_output = final_mat.get('feature_matrix')
 non_zero_labels = tools.get_is_ftu_label(final_output)
 
@@ -110,7 +110,7 @@ layer_dict = {
 
 scatter_legend_flag = True
 line_legend_flag = True
-pipeline_list = ["colon_encoder", "colon_decoder", "colon_upsam"]
+pipeline_list = ["ship_encoder", "ship_decoder", "ship_upsam"]
 for pipeline in pipeline_list:
     line_temp = []
     for t in range(len(file_name_list)):

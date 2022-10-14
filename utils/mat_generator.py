@@ -187,8 +187,8 @@ def read_raw_img_files(path, file_name_list, batch_size):
 
 
 if __name__ == '__main__':
-    organ_item = r"colon"
-    root_path = r'X:\temp\\'
+    organ_item = r"ship"
+    root_path = r'X:\temp\neec\\'
     raw_file_path = root_path + organ_item
     np.seterr(all='ignore')
 

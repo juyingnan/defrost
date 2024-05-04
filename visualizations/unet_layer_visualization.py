@@ -25,7 +25,7 @@ color_label_dict = {
     -1: "red",
 }
 
-root_path = r'X:\temp/'
+root_path = r'G:\temp/'
 file_name_list = [file_name for file_name in os.listdir(root_path) if file_name.endswith(".mat")]
 
 use_unet_structure_pos = True
@@ -118,7 +118,7 @@ for t in range(len(file_name_list)):
                       )
         fig.add_annotation(xref='x domain',
                            yref='y domain',
-                           x=0.99,
+                           x=1.5,
                            y=0.01,
                            text="{:.2f}".format(metrics.calinski_harabasz_score(X_norm, y)),
                            showarrow=False,
@@ -135,6 +135,11 @@ for t in range(len(file_name_list)):
 
 fig.update_xaxes(range=[-0.09, 1.09], showticklabels=False)
 fig.update_yaxes(range=[-0.09, 1.09], showticklabels=False)
+
+# Update font, temp for screenshot
+# fig.update_layout(font=dict(family="Arial", size=24, color="black"))
+# fig.for_each_annotation(lambda a: a.update(font=dict(family="Verdana", size=24, color="black")))
+
 
 fig.write_html(fr".\result\{file_name_list[0].split('_')[0]}_{dr_type}.html")
 fig.show()
